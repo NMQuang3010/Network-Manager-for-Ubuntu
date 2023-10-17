@@ -19,6 +19,52 @@ case $seleted_option in
         fi;;
 esac
 
+
+#mới thêm vô coi chạy thử
+#tìm địa chủ ip của mạng
+Ip=$(nmcli dev show | grep 'IP4.DNS')
+cut_ip=$(echo "$Ip" | cut -d ':' -f 2 | sed 's/ //g')
+echo "$cut_ip"
+
+result=$(echo "$cut_ip" | rev | cut -d '.' -f 2- | rev)
+echo "kq: $result"
+aray_ip=()
+aray_TM=()
+for((i=0; i<=255; i++))
+do
+	aray_ip+=("$result".$i)
+done
+#ping lấy tên của máy đang bắt mạng
+for item in "${aray_ip[@]}"
+do
+	connect_name=$(host "$item" | awk '{print $5}')
+	if [ -n "$connect_name" ];
+	then
+		 aray_TM+=($connect_name)
+	else
+		aray_TM+="123"
+	fi
 done
 
+for((i=0; i<=255;i++))
+do
+	kq+=("${aray_ip[i]}" "${aray_TM[i]}")
+done
+
+resutl_l=$(zenity --list\
+	--width=500\
+	--height=900\
+	--title="Ip "\
+	--text="Ip DNS server: $cut_ip"\
+	--column="IP" --column="TenMay"\
+	"${kq[@]}")
+
+
+if [ -n "$resutl_l" ];
+then
+	echo "Muc da chon: $resutl_l"
+else
+	echo "khong cos"
+fi
+done
 exit 0;
